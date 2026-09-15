@@ -14,7 +14,7 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; user-select: none; }
         .quiz-container { background: white; padding: 2.5rem; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); width: 95%; max-width: 750px; text-align: center; position: relative; border-top: 8px solid var(--primary); }
         #timer-bar { position: absolute; top: 0; right: 0; height: 8px; background: var(--accent); width: 100%; transition: width 1s linear; border-radius: 20px 20px 0 0; }
-        .option-btn { display: block; width: 100%; padding: 14px; margin: 12px 0; border: 2px solid #e0e0e0; border-radius: 10px; background: #fff; cursor: pointer; transition: all 0.3s ease; font-size: 1.15rem; font-weight: 500; color: #333; text-align: right; }
+        .option-btn { display: block; width: 100%; padding: 14px; margin: 12px 0; border: 2px solid #e0e0e0; border-radius: 10px; background: #fff; cursor: pointer; transition: all 0.3s ease; font-size: 1.15rem; font-weight: 500; color: #333; text-align: center; }
         .option-btn:hover { border-color: var(--secondary); background-color: #f3e5f5; }
         .correct-flash { background-color: #e8f5e9 !important; border-color: var(--correct) !important; color: var(--correct); border-width: 3px !important; box-shadow: 0 0 10px rgba(27,94,32,0.2); }
         .wrong-flash { background-color: #ffebee !important; border-color: var(--wrong) !important; color: var(--wrong); }
@@ -309,35 +309,4 @@
             const reviewItem = document.createElement('div');
             reviewItem.className = `review-item ${item.isCorrect ? 'correct-ans' : 'wrong-ans'}`;
             
-            let feedbackText = item.isCorrect 
-                ? "✅ أحسنت! إجابتك صحيحة وموفقة." 
-                : `❌ إجابتك غير صحيحة. الصواب هو: (${item.correctAns})`;
-
-            reviewItem.innerHTML = `
-                <div class="review-q">س ${index + 1}: ${item.qText}</div>
-                <div class="review-details">
-                    <div>إجابتك: <strong>${item.studentAns}</strong></div>
-                    <div style="margin-top: 4px; color: ${item.isCorrect ? '#1b5e20' : '#b71c1c'};">${feedbackText}</div>
-                </div>
-            `;
-            reviewListContainer.appendChild(reviewItem);
-        });
-
-        // حفظ النتيجة في Firebase
-        try {
-            await db.collection("alkfaeat_results").add({ 
-                name: sName, 
-                email: sEmail, 
-                score: score, 
-                total: quizData.length, 
-                model_id: currentModelId, 
-                answers: studentAnswersLog,
-                time: firebase.firestore.FieldValue.serverTimestamp() 
-            });
-        } catch (e) {
-            console.log("تعذر حفظ النتيجة سحابياً.");
-        }
-    }
-</script>
-</body>
-</html>
+            let feedba
