@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحدي النحو - أ/ عبدالعزيز الفيفي</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        :root { --primary: #1a237e; --secondary: #311b92; --bg: #f8f9fa; --accent: #f57c00; --correct: #1b5e20; --wrong: #b71c1c; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .quiz-container { background: white; padding: 2.5rem; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); width: 95%; max-width: 700px; text-align: center; position: relative; border-top: 8px solid var(--primary); }
+        #timer-bar { position: absolute; top: 0; right: 0; height: 8px; background: var(--accent); width: 100%; transition: width 1s linear; border-radius: 20px 20px 0 0; }
+        .option-btn { display: block; width: 100%; padding: 14px; margin: 12px 0; border: 2px solid #e0e0e0; border-radius: 10px; background: #fff; cursor: pointer; transition: all 0.3s ease; font-size: 1.15rem; font-weight: 500; color: #333; }
+        .option-btn:hover { border-color: var(--secondary); background-color: #f3e5f5; }
+        .correct-flash { background-color: #e8f5e9 !important; border-color: var(--correct) !important; color: var(--correct); border-width: 3px !important; box-shadow: 0 0 10px rgba(27,94,32,0.2); }
+        .wrong-flash { background-color: #ffebee !important; border-color: var(--wrong) !important; color: var(--wrong); }
+        .hidden { display: none; }
+        .reading-text { background: #fffde7; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: right; font-size: 1.05rem; border-right: 6px solid var(--accent); line-height: 1.8; color: #444; }
+        input[type="text"] { width: 85%; padding: 15px; margin-bottom: 25px; border-radius: 10px; border: 2px solid #ddd; font-size: 1.1rem; text-align: center; outline: none; }
+        .btn-start { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 15px 40px; border: none; border-radius: 12px; cursor: pointer; font-size: 1.2rem; font-weight: bold; transition: transform 0.2s; }
+        .btn-start:hover { transform: scale(1.05); }
+        #feedback { margin-top: 20px; font-weight: bold; font-size: 1.2rem; min-height: 1.6em; }
+        #timer-text { font-weight: bold; color: var(--wrong); margin-bottom: 15px; font-size: 1.1rem; }
+        .copyright { font-size: 0.9rem; color: #777; margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; }
+        .normal-text { color: #555; font-weight: normal; }
+        .date-badge { background: #eee; color: var(--wrong); padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; margin-bottom: 15px; display: inline-block; }
+    </style>
+</head>
+<body onload="updateDateTime(); checkSecurity();">
+
+<div class="quiz-container">
+    <div id="timer-bar"></div>
+    
+    <div id="login-section">
+        <h1 style="color: var(--primary); margin-bottom: 10px;">التحدي النحوي</h1>
+        <div id="date-display" class="date-badge">جاري التحميل...</div>
+        <div class="reading-text" style="text-align: center; border: none; background: #e8eaf6;">
+            "ليس هناك تحدٍ أكبر من تطوير ذاتك"
+        </div>
+        <input type="text" id="student-name" placeholder="أدخل اسمك الثلاثي للمنافسة...">
+        <br>
+        <button class="btn-start" onclick="startQuiz()">ابدأ تحدي النخبة 🚀</button>
+        <div class="copyright">أ/ <span class="normal-text">عبدالعزيز الفيفي</span> - <span class="normal-text">ثانوية الأمير عبدالمجيد 🎓</span></div>
+    </div>
+
+    <div id="quiz-section" class="hidden">
+        <div id="timer-text">⏳ المتبقي: 40 ثانية</div>
+        <h3 id="question-title" style="color: var(--secondary); margin-bottom: 10px; font-size: 1.3rem;"></h3>
+        <div id="reading-container" class="reading-text hidden"></div>
+        <h2 id="question-text" style="margin: 15px 0; color: #222;"></h2>
+        <div id="options-container"></div>
+        <div id="feedback"></div>
+        <div class="copyright">أ/ <span class="normal-text">عبدالعزيز الفيفي</span> - <span class="normal-text">ثانوية الأمير عبدالمجيد 🎓</span></div>
+    </div>
+
+    <div id="result-section" class="hidden">
+        <h2 style="color: var(--primary);">انتهى سباق التميز!</h2>
+        <h1 id="final-score" style="font-size: 3rem; color: var(--accent); margin: 20px 0;"></h1>
+        <button class="btn-start" onclick="location.reload()">أعد الكرة.. كُن النسخة الأفضل 🔄</button>
+        <p class="copyright">بإشراف أ/ <span class="normal-text">عبدالعزيز الفيفي</span> - <span class="normal-text">ثانوية الأمير عبدالمجيد 🎓</span></p>
+    </div>
+</div>
+
+<script>
+    // كود الارتباط الشرطي لحماية الملكية الفكرية
+    function checkSecurity() {
+        const expectedAuthor = "عبدالعزيز الفيفي";
+        const expectedSchool = "ثانوية الأمير عبدالمجيد";
+        if (!document.body.innerHTML.includes(expectedAuthor) || !document.body.innerHTML.includes(expectedSchool)) {
+            document.body.innerHTML = "<h1 style='text-align:center; color:red; margin-top:20vh;'>تنبيه: حقوق الملكية الفكرية محفوظة للأستاذ عبدالعزيز الفيفي وثانوية الأمير عبدالمجيد. لا يمكن تشغيل النظام بدون الاعتماد الرسمي.</h1>";
+        }
+    }
+
+    function updateDateTime() {
+        const today = new Date();
+        const hijriOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', calendar: 'islamic-umalqura', numberingSystem: 'arabic' };
+        const gregOptions = { day: 'numeric', month: 'long', year: 'numeric', numberingSystem: 'arabic' };
+        document.getElementById('date-display').innerText = `${new Intl.DateTimeFormat('ar-SA', hijriOptions).format(today)} | ${new Intl.DateTimeFormat('ar-SA', gregOptions).format(today)} م`;
+    }
+
+    let timeLeft = 40, timerInterval, currentQ = 0, score = 0;
+
+    // مصفوفة الأسئلة الكاملة للفاعل ونائب الفاعل والجملة المعلومة والمجهولة
+    const rawQuizData = [
+        { t: "استخرج", q: "في جملة (كَتبَ الطالبُ الدرسَ)، استخرج الفاعل:", opts: ["الطالبُ", "الدرسَ", "كَتبَ", "لا يوجد فاعل"], ans: "الطالبُ" },
+        { t: "استخرج", q: "في جملة (خُلقَ الإنسانُ ضعيفاً)، استخرج نائب الفاعل:", opts: ["الإنسانُ", "ضعيفاً", "خُلقَ", "مستتر تقديره هو"], ans: "الإنسانُ" },
+        { t: "استخرج", q: "في جملة (أكرمَ المعلمُ التلميذينِ)، حدد الفاعل وبين علامة إعرابه:", opts: ["المعلمُ - الضمة الظاهرة", "التلميذينِ - الياء", "المعلمُ - الألف", "لا يوجد فاعل"], ans: "المعلمُ - الضمة الظاهرة" },
+        { t: "استخرج", q: "في جملة (حُفظتِ القصائدُ)، استخرج نائب الفاعل وبين علامة إعرابه:", opts: ["القصائدُ - الضمة", "القصائدُ - الكسرة", "تتاء التأسيس - السكون", "لا يوجد نائب فاعل"], ans: "القصائدُ - الضمة" },
+        { t: "استخرج", q: "في جملة (يُصانُ الوطنُ بأبنائه)، استخرج نائب الفاعل:", opts: ["الوطنُ", "بأبنائه", "يُصانُ", "ضمير مستتر"], ans: "الوطنُ" },
+
+        { t: "إكمال", q: "حضرَ ......... إلى المدرسة (اختر الفاعل المناسب):", opts: ["الطالبُ", "الطالبَ", "الطالبِ", "الطالبانِ (منصوبة)"], ans: "الطالبُ" },
+        { t: "إكمال", q: "رُفِعَ ......... في المسابقة (اختر نائب الفاعل المناسب):", opts: ["العَلَمُ", "العَلَمَ", "العَلَمِ", "العَلَمَانِ"], ans: "العَلَمُ" },
+        { t: "إكمال", q: "يُكرمُ المديرُ ......... (اختر الفاعل المناسب أو المفعول به المقيم مقامه):", opts: ["المجتهدينَ", "المجتهدون", "المجتهدان", "المجتهدُ"], ans: "المجتهدينَ" },
+        { t: "إكمال", q: "سُئِلَ ......... عن الدرس (اختر نائب الفاعل المناسب):", opts: ["التلميذُ", "التلميذَ", "التلميذِ", "التلميذان"], ans: "التلميذُ" },
+        { t: "إكمال", q: "تشرقُ ......... صباحاً (اختر الفاعل المناسب):", opts: ["الشمسُ", "الشمسَ", "الشمسِ", "الشمسين"], ans: "الشمسُ" },
+
+        { t: "صح وخطأ", q: "الفاعل هو اسم مرفوع دَلَّ على من فعل الفعل وكان مسنداً إليه الفعل قبله.", opts: ["صحيح", "خطأ"], ans: "صحيح" },
+        { t: "صح وخطأ", q: "نائب الفاعل هو اسم مرفوع يحل محل الفاعل بعد حذفه ويُبنى الفعل له.", opts: ["صحيح", "خطأ"], ans: "صحيح" },
+        { t: "صح وخطأ", q: "في الفعل الماضي المبني للمجهول، يُضم أوله ويكسر ما قبل آخره.", opts: ["صحيح", "خطأ"], ans: "خطأ" },
+        { t: "صح وخطأ", q: "في الفعل المضارع المبني للمجهول، يُضم أوله ويفتح ما قبل آخره.", opts: ["صحيح", "خطأ"], ans: "صحيح" },
+        { t: "صح وخطأ", q: "الجملة المعلومة هي التي ذُكر فيها الفاعل ولم يُحذف.", opts: ["صحيح", "خطأ"], ans: "صحيح" },
+
+        { t: "أعرب", q: "ما إعراب كلمة (المعلمُ) في جملة (شرحَ المعلمُ الدرسَ)؟", opts: ["فاعل مرفوع وعلامة رفعه الضمة الظاهرة", "مبتدأ مرفوع بالضمة", "نائب فاعل مرفوع", "مفعول به منصوب"], ans: "فاعل مرفوع وعلامة رفعه الضمة الظاهرة" },
+        { t: "أعرب", q: "ما إعراب (البابُ) في جملة (فُتِحَ البابُ)؟", opts: ["نائب فاعل مرفوع وعلامة رفعه الضمة الظاهرة", "فاعل مرفوع بالضمة", "مفعول به منصوب بالفتحة", "خبر مرفوع"], ans: "نائب فاعل مرفوع وعلامة رفعه الضمة الظاهرة" },
+        { t: "أعرب", q: "في جملة (حضرَ المهندسونَ)، ما إعراب (المهندسونَ)؟", opts: ["فاعل مرفوع وعلامة رفعه الواو لانه جمع مذكر سالم", "نائب فاعل مرفوع بالواو", "مفعول به منصوب بالياء", "اسم مجرور"], ans: "فاعل مرفوع وعلامة رفعه الواو لانه جمع مذكر سالم" },
+        { t: "أعرب", q: "ما علامة إعراب نائب الفاعل في جملة (كُوفِئَ المتفوقانِ)؟", opts: ["الألف لأنه مثنى", "الضمة الظاهرة", "الواو لأنه جمع مذكر سالم", "الفتحة"], ans: "الألف لأنه مثنى" },
+        { t: "أعرب", q: "ما إعراب (أبوكَ) في جملة (جاءَ أبوكَ الى المسجد)؟", opts: ["فاعل مرفوع بالواو لأنه من الأسماء الخمسة", "نائب فاعل مرفوع بالواو", "اسم إن مرفوع", "مبتدأ مرفوع"], ans: "فاعل مرفوع بالواو لأنه من الأسماء الخمسة" },
+
+        { t: "صحح", q: "صحح الخطأ في تحويل الجملة للمجهول: (كَسرَ الولدُ الزجاجَ ➔ كُسِرَ الزجاجُ)", opts: ["صحيحة تماماً لا تحتاج تعديل", "كُسِرَ الزجاجَ", "كَسَرَ الزجاجُ", "يُكسر الزجاجُ"], ans: "صحيحة تماماً لا تحتاج تعديل" },
+        { t: "صحح", q: "صحح الخطأ النحوي في الجملة: (حضر المعلمينَ)", opts: ["حضر المعلمون", "حضر المعلمينُ", "حضرا المعلمون", "صحيحة"], ans: "حضر المعلمون" },
+        { t: "صحح", q: "الصواب عند بناء الجملة للمجهول (يُشاهدُ الناسُ الهلالَ) هو:", opts: ["يُشاهدُ الهلالُ", "يُشاهدُ الهلالَ", "شُاهدَ الهلالِ", "تُشاهد الهلال"], ans: "يُشاهدُ الهلالُ" },
+        { t: "صحح", q: "صحح الخطأ في جملة نائب الفاعل: (قُرِئَتِ المجلتانِ)", opts: ["صحيحة لا تحتاج تصحيح", "قُرِئَتِ المجلتينِ", "قُرِئَ المجلتان", "قرأت المجلتان"], ans: "صحيحة لا تحتاج تصحيح" },
+        { t: "صحح", q: "صحح الخطأ في صياغة الفعل للمجهول: (قَالَ المؤمنُ الحقَّ ➔ قِيلَ الحقُّ)", opts: ["صحيحة تماماً", "قُولَ الحقُّ", "قيل الحقَّ", "أُقيل الحق"], ans: "صحيحة تماماً" },
+
+        { t: "مثل", q: "أي الجمل التالية تمثل جملة فعلية معلومة فاعلها جمع مؤنث سالم؟", opts: ["قرأتِ الطالباتُ الدرسَ", "تُقْرأُ الكتبُ", "حضر المهندسون", "كوفئ المجتهدون"], ans: "قرأتِ الطالباتُ الدرسَ" },
+        { t: "مثل", q: "اختر الجملة التي تمثل بناء الفعل الماضي للمجهول بشكل صحيح:", opts: ["هُدِمَ البيتُ", "هَدَمَ البيتُ", "يُهدم البيتُ", "هَدَمَ الولد البيت"], ans: "هُدِمَ البيتُ" },
+        { t: "مثل", q: "اختر الجملة التي تحتوي على نائب فاعل مرفوع بالواو:", opts: ["كُوفِئَ المعلمون المحبوبون", "حضر المعلمون", "يكرم المدير المعلمين", "رُفِعَ العلمان"], ans: "كُوفِئَ المعلمون المحبوبون" },
+        { t: "مثل", q: "أي الجمل التالية تبدأ بفعل مضارع مبني للمجهول؟", opts: ["يُحترَمُ المخلصُ في عمله", "يحترم الناس المخلص", "احترم المخلص", "حُترم المخلص"], ans: "يُحترَمُ المخلصُ في عمله" },
+        { t: "مثل", q: "اختر الجملة التي تمثل فاعلاً مرفوعاً بالألف (مثنى):", opts: ["نجحَ الطالبانِ", "نجحَ الطلابُ", "نجحَ الطالبينِ", "نجحَ المهندس"], ans: "نجحَ الطالبانِ" }
+    ];
+
+    let quizData = [];
+    function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+    function startQuiz() {
+        if (!document.getElementById('student-name').value) { alert("لطفاً، ادخل اسمك الثلاثي"); return; }
+        quizData = shuffle([...rawQuizData]);
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('quiz-section').classList.remove('hidden');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const q = quizData[currentQ];
+        document.getElementById('question-title').innerText = `س ${currentQ + 1} | ${q.t}`;
+        const readingBox = document.getElementById('reading-container');
+        readingBox.classList.add('hidden'); // إخفاء صندوق النصوص التابع للاستيعاب لعدم احتياجه هنا
+        
+        document.getElementById('question-text').innerText = q.q;
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        document.getElementById('feedback').innerText = '';
+        
+        shuffle([...q.opts]).forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(btn, opt === q.ans, q.ans);
+            container.appendChild(btn);
+        });
+        startTimer();
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        timeLeft = 40;
+        updateTimerUI();
+        timerInterval = setInterval(() => { timeLeft--; updateTimerUI(); if (timeLeft <= 0) { clearInterval(timerInterval); handleTimeout(); } }, 1000);
+    }
+
+    function updateTimerUI() {
+        document.getElementById('timer-text').innerText = `⏳ المتبقي: ${timeLeft} ثانية`;
+        document.getElementById('timer-bar').style.width = `${(timeLeft / 40) * 100}%`;
+    }
+
+    function checkAnswer(btn, isCorrect, correctText) {
+        clearInterval(timerInterval);
+        disableButtons();
+        if (isCorrect) {
+            score++;
+            btn.classList.add('correct-flash');
+            document.getElementById('feedback').innerHTML = "<span style='color:var(--correct)'>رائع! إجابة دقيقة يا بطل 🌟</span>";
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        } else {
+            btn.classList.add('wrong-flash');
+            highlightCorrect(correctText);
+            document.getElementById('feedback').innerHTML = "<span style='color:var(--wrong)'>محاولة جيدة، الصواب موضح بالأخضر 💪</span>";
+        }
+        setTimeout(nextQuestion, 4000);
+    }
+
+    function handleTimeout() {
+        disableButtons();
+        highlightCorrect(quizData[currentQ].ans);
+        document.getElementById('feedback').innerHTML = "<span style='color:var(--accent)'>انتهى الوقت! ركز في السؤال القادم 🕒</span>";
+        setTimeout(nextQuestion, 4000);
+    }
+
+    function highlightCorrect(text) {
+        document.querySelectorAll('.option-btn').forEach(b => { if (b.innerText === text) b.classList.add('correct-flash'); });
+    }
+
+    function disableButtons() { document.querySelectorAll('.option-btn').forEach(b => b.disabled = true); }
+
+    function nextQuestion() {
+        currentQ++;
+        if (currentQ < quizData.length) showQuestion(); else finishQuiz();
+    }
+
+    function finishQuiz() {
+        document.getElementById('quiz-section').classList.add('hidden');
+        document.getElementById('result-section').classList.remove('hidden');
+        // عرض الدرجة النهائية فقط بدون أي إحصائيات معقدة بناءً على تفضيلك
+        document.getElementById('final-score').innerText = `${score} / ${quizData.length}`;
+    }
+</script>
+</body>
+</html>
+
