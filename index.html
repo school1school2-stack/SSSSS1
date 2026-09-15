@@ -73,7 +73,7 @@
         <div class="copyright">أ/ <span class="normal-text">عبدالعزيز الفيفي</span> - <span class="normal-text">ثانوية الأمير عبدالمجيد 🎓</span></div>
     </div>
 
-    <!-- شاشة النهاية والنتيجة بدون إحصائيات معقدة -->
+    <!-- شاشة النهاية والنتيجة -->
     <div id="result-section" class="hidden">
         <h2 style="color: var(--primary);">انتهى سباق التميز!</h2>
         <p id="final-greeting" style="font-weight: bold; color: var(--secondary); margin: 10px 0;"></p>
@@ -90,7 +90,7 @@
 </div>
 
 <script>
-    // إعدادات اتصال Firebase (من الكود الثاني الخاص بك)
+    // إعدادات اتصال Firebase
     const firebaseConfig = { apiKey: "AIzaSyBkCO7FDQXd89YDf843J4_AtvEFvzzt-R0", authDomain: "aztlg-494c3.firebaseapp.com", projectId: "aztlg-494c3", storageBucket: "aztlg-494c3.firebasestorage.app", messagingSenderId: "597051893949", appId: "1:597051893949:web:de5554ac900317a92b2fd4" };
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.firestore();
@@ -307,4 +307,37 @@
 
         studentAnswersLog.forEach((item, index) => {
             const reviewItem = document.createElement('div');
-            reviewItem.className = `review-item ${item.isCorrect ? 'correct-ans' : 'wro
+            reviewItem.className = `review-item ${item.isCorrect ? 'correct-ans' : 'wrong-ans'}`;
+            
+            let feedbackText = item.isCorrect 
+                ? "✅ أحسنت! إجابتك صحيحة وموفقة." 
+                : `❌ إجابتك غير صحيحة. الصواب هو: (${item.correctAns})`;
+
+            reviewItem.innerHTML = `
+                <div class="review-q">س ${index + 1}: ${item.qText}</div>
+                <div class="review-details">
+                    <div>إجابتك: <strong>${item.studentAns}</strong></div>
+                    <div style="margin-top: 4px; color: ${item.isCorrect ? '#1b5e20' : '#b71c1c'};">${feedbackText}</div>
+                </div>
+            `;
+            reviewListContainer.appendChild(reviewItem);
+        });
+
+        // حفظ النتيجة في Firebase
+        try {
+            await db.collection("alkfaeat_results").add({ 
+                name: sName, 
+                email: sEmail, 
+                score: score, 
+                total: quizData.length, 
+                model_id: currentModelId, 
+                answers: studentAnswersLog,
+                time: firebase.firestore.FieldValue.serverTimestamp() 
+            });
+        } catch (e) {
+            console.log("تعذر حفظ النتيجة سحابياً.");
+        }
+    }
+</script>
+</body>
+</html>
