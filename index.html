@@ -75,7 +75,11 @@
         const today = new Date();
         const hijriOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', calendar: 'islamic-umalqura', numberingSystem: 'arabic' };
         const gregOptions = { day: 'numeric', month: 'long', year: 'numeric', numberingSystem: 'arabic' };
-        document.getElementById('date-display').innerText = `${new Intl.DateTimeFormat('ar-SA', hijriOptions).format(today)} | ${new Intl.DateTimeFormat('ar-SA', gregOptions).format(today)} م`;
+        
+        const hijriDate = new Intl.DateTimeFormat('ar-SA', hijriOptions).format(today);
+        const gregDate = new Intl.DateTimeFormat('ar-SA', gregOptions).format(today);
+        
+        document.getElementById('date-display').innerText = `${hijriDate} هـ | ${gregDate} م`;
     }
 
     let timeLeft = 40, timerInterval, currentQ = 0, score = 0;
@@ -134,7 +138,7 @@
         const q = quizData[currentQ];
         document.getElementById('question-title').innerText = `س ${currentQ + 1} | ${q.t}`;
         const readingBox = document.getElementById('reading-container');
-        readingBox.classList.add('hidden'); // إخفاء صندوق النصوص التابع للاستيعاب لعدم احتياجه هنا
+        readingBox.classList.add('hidden');
         
         document.getElementById('question-text').innerText = q.q;
         const container = document.getElementById('options-container');
@@ -200,10 +204,8 @@
     function finishQuiz() {
         document.getElementById('quiz-section').classList.add('hidden');
         document.getElementById('result-section').classList.remove('hidden');
-        // عرض الدرجة النهائية فقط بدون أي إحصائيات معقدة بناءً على تفضيلك
         document.getElementById('final-score').innerText = `${score} / ${quizData.length}`;
     }
 </script>
 </body>
 </html>
-
